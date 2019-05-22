@@ -1,0 +1,5 @@
+*.json
+benchmarkfiles/
+benchmarkpython/
+__pycache__
+.pytest_cache
