@@ -30,12 +30,19 @@ without generality or speed in mind.
 So far, this whole document is mainly a placeholder.
 
 # Overview
+The plots are split by the memory footprint of the operations, i.e. by size size of the tensors involved which have been classified as tiny, small, medium, large or huge.
+
+## tiny tensors
 ![](plots/float64-tiny.png)
 
+## small tensors
 ![](plots/float64-small.png)
 
+## medium tensors
 ![](plots/float64-medium.png)
 
+## large tensors
 ![](plots/float64-large.png)
 
+## huge tensors
 ![](plots/float64-huge.png)
