@@ -3,7 +3,9 @@ using DataFrames
 using Statistics, Dates
 using BenchmarkTools
 
-const emptydf = DataFrame((lang = String[],
+const emptydf = DataFrame((
+           lang = String[],
+           label = String[],
            dtime = DateTime[],
            vlang = String[],
            pcommit = Union{Missing,String}[],
@@ -19,8 +21,8 @@ const emptydf = DataFrame((lang = String[],
            tstddev = Float64[]
            ))
 
-parsepybenchjson(df, filename; which = "numpy") = parsepybenchjson!(deepcopy(df), filename, which = which)
-function parsepybenchjson!(df::DataFrame, filename::String; which = "numpy")
+parsepybenchjson(df, filename; label = "numpy") = parsepybenchjson!(deepcopy(df), filename; label = label)
+function parsepybenchjson!(df::DataFrame, filename::String; label = "numpy")
     pjson = JSON.parsefile(filename)
     vlang = pjson["machine_info"]["python_version"]
     dtime = DateTime(pjson["datetime"][1:end-3])
@@ -31,7 +33,8 @@ function parsepybenchjson!(df::DataFrame, filename::String; which = "numpy")
         stats = d["stats"]
         op, mtype, ttype = string.(m.captures)
         push!(df, (
-            lang = "python-"*which,
+            lang = "python",
+            label = label,
             dtime = dtime,
             vlang = vlang,
             pcommit = pcommit,
@@ -52,8 +55,8 @@ function parsepybenchjson!(df::DataFrame, filename::String; which = "numpy")
 end
 
 
-parsejuliajson(df, filename) = parsejuliajson!(deepcopy(df), filename)
-function parsejuliajson!(df::DataFrame, filename::String)
+parsejuliajson(df, filename; label = "") = parsejuliajson!(deepcopy(df), filename; label = label)
+function parsejuliajson!(df::DataFrame, filename::String; label::String = "")
     jjson = JSON.parsefile(filename)
     vlang = match(r"Julia Version (\d*.\d*.\d*)",jjson["vinfo"]).captures[1]
     isnothing(vlang) && error("version couldn't be read")
@@ -66,6 +69,7 @@ function parsejuliajson!(df::DataFrame, filename::String)
         times = trial.times
         push!(df, (
             lang = "julia",
+            label = label,
             dtime = dtime,
             vlang = vlang,
             pcommit = pcommit,
