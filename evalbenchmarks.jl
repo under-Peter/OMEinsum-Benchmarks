@@ -29,7 +29,7 @@ p = @df @where(df, :ttype .== "Float64", :mtype .== "medium") scatter(
     ylabel = "ns",
     xrotation=35, xtickfont = font(8))
 
-mtypes = ["small", "medium", "large", "huge"]
+mtypes = ["tiny", "small", "medium", "large", "huge"]
 for mtype in mtypes
     p = @df @where(df, :ttype .== "Float64", :mtype .== mtype) scatter(
         :op, :tmin, group = :label, yscale=:log10,
