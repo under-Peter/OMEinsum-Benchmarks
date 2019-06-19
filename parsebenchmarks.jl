@@ -43,7 +43,7 @@ function parsepybenchjson!(df::DataFrame, filename::String; label = "numpy")
             mtype=mtype,
             memory = missing,
             allocs = missing,
-            #python esults are in seconds -> go to nanoseconds
+            #python results are in seconds -> go to nanoseconds
             tmin    = 10^9*d["stats"]["min"],
             tmax    = 10^9*d["stats"]["max"],
             tmedian = 10^9*d["stats"]["median"],
@@ -86,4 +86,46 @@ function parsejuliajson!(df::DataFrame, filename::String; label::String = "")
         ))
     end
     df
+end
+
+@doc raw"
+    benchmarkscores(df::DataFrame, ref::String)
+calculates a benchmarkscore for each label in `df` with the label `ref`
+as a reference. The scores are calculated as:
+``s_{\text{label}} = \Sum_{\text{ops},\text{sizes},\text{types}} w_\text{op} * log(t_\text{label}/t_\text{ref})``
+where the weights can be found in the function definition.
+
+Since missing terms are ignored, it is recommended to preparse the `df`.
+"
+
+function benchmarkscores(df, ref)
+    weights = Dict{String,Float64}(
+         "matmul" => 1,
+         "batchmul" => 1,
+         "dot" => 1,
+         "trace" => 0.5,
+         "ptrace" => 0.3,
+         "diag" => 0.5,
+         "perm" => 0.8,
+         "tcontract" => 1,
+         "star" => 0.7,
+         "starandcontract" => 0.2,
+         "indexsum" => 0.6,
+         "hadamard" => 0.6,
+         "outer" => 0.3)
+    fdf = DataFrame(label = String[], score = Float64[])
+    refdf = @where(df, :label .== ref)
+    for x in groupby(df, :label)
+        l = x.label[1]
+        score = 0.
+        for r in eachrow(x)
+            op, ttype, mtype, t = r.op, r.ttype, r.mtype, r.tmin
+            t0 = @where(refdf, :ttype .== ttype,
+                               :op .== op,
+                                :mtype .== mtype).tmin[]
+            score += weights[op] * log(t/t0)
+        end
+        push!(fdf, (label = l, score = score))
+    end
+    fdf
 end

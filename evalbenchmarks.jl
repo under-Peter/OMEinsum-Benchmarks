@@ -9,6 +9,7 @@ using CSV
 include("parsebenchmarks.jl")
 using PkgBenchmark
 using OMEinsum
+benchmarkpkg("OMEinsum", "benchmark", resultfile = "benchmarkfiles/juliabenchmark.json")
 # benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
 # benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
 # benchmarkpkg("OMEinsum", "naive-einsum-bm", resultfile = "benchmarkfiles/juliabenchmarknaiv.json")
@@ -26,26 +27,24 @@ using OMEinsum
 
 df = CSV.read("benchmarkdf.csv")
 
-gr()
-tmpdf = @where(df,
-    :label .∈ Ref(("exp-space","naive", "dispatch","native","numpy")),
-    :mtype .== "tiny",
-    :ttype .== "Float64"
-    )
-p = @df tmpdf scatter(
-    :op, :tmin, group = (:label), yscale=:log10,
-    # legend = nothing,
-    # legend = :topleft,
-    # marker = :auto,
+@df @where(df, :label .∈ Ref(("native","numpy","dispatch")),
+               :ttype .== "Float64",
+               :mtype .== "medium") scatter(
+    :op,
+    :tmin,
     ylims = (1, 10^13),
-    yticks = 10 .^ (0:13),
-    ylabel = "ns",
-    xrotation=35, xtickfont = font(8))
-savefig("test")
+    group = :label,
+    legend = :topleft,
+    xrotation=35, xtickfont = font(8),
+    yscale=:log10)
 
 mtypes = ["tiny", "small", "medium", "large", "huge"]
 for mtype in mtypes
-    p = @df @where(df, :ttype .== "Float64", :mtype .== mtype) scatter(
+    p = @df @where(df,
+        :ttype .== "Float64",
+        :mtype .== mtype,
+        :label .∈ Ref(("dispatch", "native","numpy","torch","einsumjl")),
+        ) scatter(
         :op, :tmin, group = :label, yscale=:log10,
         legend = :topleft,
         marker = :auto,
@@ -57,37 +56,10 @@ for mtype in mtypes
 end
 
 
-function benchmarkscores(df, ref)
-    weights = Dict{String,Float64}(
-         "matmul" => 1,
-         "batchmul" => 1,
-         "dot" => 1,
-         "trace" => 0.5,
-         "ptrace" => 0.3,
-         "diag" => 0.5,
-         "perm" => 0.8,
-         "tcontract" => 1,
-         "star" => 0.7,
-         "starandcontract" => 0.2,
-         "indexsum" => 0.6,
-         "hadamard" => 0.6,
-         "outer" => 0.3)
-    fdf = DataFrame(label = String[], score = Float64[])
-    refdf = @where(df, :label .== ref)
-    for x in groupby(df, :label)
-        l = x.label[1]
-        score = 0.
-        for r in eachrow(x)
-            op = r.op
-            ttype = r.ttype
-            mtype = r.mtype
-            t0 = @where(refdf, :ttype .== ttype, :op .== op, :mtype .== mtype).tmin[]
-            t = r.tmin
-            score += weights[op] * log(t/t0)
-        end
-        push!(fdf, (label = l, score = score))
-    end
-    fdf
-end
+scoresdf = benchmarkscores(
+    @where(df, :label .∈ Ref(("einsumjl","dispatch","naive","numpy", "torch")),
+               :ttype .== "Float64"),
+    "numpy")
+using CSV
 
-benchmarkscores(df, "numpy")
+CSV.write("scores.csv",scoresdf)
