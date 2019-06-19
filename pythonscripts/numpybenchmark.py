@@ -12,8 +12,8 @@ import numpy as np
 @pytest.mark.parametrize("arr",[
     np.random.rand(2,2),
     np.random.rand(10,10),
-    np.random.rand(10^2,10^2),
-    np.random.rand(10^3,10^3)
+    np.random.rand(100,100),
+    np.random.rand(1000,1000)
     ],
     ids = ["tiny", "small", "medium", "large"])
 def test_matmul(benchmark, arr, dt):
@@ -26,8 +26,8 @@ def test_matmul(benchmark, arr, dt):
 @pytest.mark.parametrize("arr",[
     np.random.rand(2,2,3),
     np.random.rand(10,10,3),
-    np.random.rand(10^2,10^2,3),
-    np.random.rand(10^3,10^3,3)
+    np.random.rand(100,100,3),
+    np.random.rand(1000,1000,3)
     ],
     ids = ["tiny", "small", "medium", "large"])
 def test_batchmul(benchmark, arr, dt):
@@ -55,8 +55,8 @@ def test_dot(benchmark, arr, dt):
 @pytest.mark.parametrize("arr",[
     np.random.rand(2,2),
     np.random.rand(10,10),
-    np.random.rand(10^2,10^2),
-    np.random.rand(10^3,10^3)
+    np.random.rand(100,100),
+    np.random.rand(1000,1000)
     ],
     ids =["tiny", "small", "medium", "large"])
 def test_trace(benchmark, arr, dt):
@@ -91,7 +91,7 @@ def test_ptrace(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large", "huge"])
 def test_diag(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "jii->ji", arr)
+    benchmark((lambda x,y: np.einsum(x,y).copy()), "jii->ji", arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -105,7 +105,7 @@ def test_diag(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large"])
 def test_perm(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "ijkl->ljki", arr)
+    benchmark((lambda x,y: np.einsum(x,y).copy()), "ijkl->ljki", arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -190,4 +190,3 @@ def test_hadamard(benchmark, arr, dt):
 def test_outer(benchmark, arr, dt):
     arr = arr.astype(dt)
     benchmark(np.einsum, "ij,kl->ijkl", arr,arr)
-

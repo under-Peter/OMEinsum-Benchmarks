@@ -12,8 +12,8 @@ import pytest
 @pytest.mark.parametrize("arr",[
     numpy.random.rand(2,2),
     numpy.random.rand(10,10),
-    numpy.random.rand(10^2,10^2),
-    numpy.random.rand(10^3,10^3)
+    numpy.random.rand(100,100),
+    numpy.random.rand(1000,1000)
     ],
     ids = ["tiny", "small", "medium", "large"])
 def test_matmul(benchmark, arr, dt):
@@ -26,8 +26,8 @@ def test_matmul(benchmark, arr, dt):
 @pytest.mark.parametrize("arr",[
     numpy.random.rand(2,2,3),
     numpy.random.rand(10,10,3),
-    numpy.random.rand(10^2,10^2,3),
-    numpy.random.rand(10^3,10^3,3)
+    numpy.random.rand(100,100,3),
+    numpy.random.rand(1000,1000,3)
     ],
     ids = ["tiny", "small", "medium", "large"])
 def test_batchmul(benchmark, arr, dt):
@@ -55,8 +55,8 @@ def test_dot(benchmark, arr, dt):
 @pytest.mark.parametrize("arr",[
     numpy.random.rand(2,2),
     numpy.random.rand(10,10),
-    numpy.random.rand(10^2,10^2),
-    numpy.random.rand(10^3,10^3)
+    numpy.random.rand(100,100),
+    numpy.random.rand(1000,1000)
     ],
     ids =["tiny", "small", "medium", "large"])
 def test_trace(benchmark, arr, dt):
@@ -190,4 +190,3 @@ def test_hadamard(benchmark, arr, dt):
 def test_outer(benchmark, arr, dt):
     arr = torch.tensor(arr, dtype=dt)
     benchmark(torch.einsum, "ij,kl->ijkl", arr,arr)
-
