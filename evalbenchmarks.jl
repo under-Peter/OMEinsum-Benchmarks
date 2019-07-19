@@ -9,7 +9,9 @@ using CSV
 include("parsebenchmarks.jl")
 using PkgBenchmark
 using OMEinsum
-benchmarkpkg("OMEinsum", "benchmark", resultfile = "benchmarkfiles/juliabenchmark.json")
+# benchmarkpkg("OMEinsum", "benchmark", resultfile = "benchmarkfiles/juliabenchmark.json")
+# benchmarkpkg("OMEinsum", "fix-benchmarks", resultfile = "benchmarkfiles/juliabenchmarkmaster.json")
+# benchmarkpkg("OMEinsum", "master", resultfile = "benchmarkfiles/juliabenchmarkmasterdispatch.json")
 # benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
 # benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
 # benchmarkpkg("OMEinsum", "naive-einsum-bm", resultfile = "benchmarkfiles/juliabenchmarknaiv.json")
@@ -23,11 +25,13 @@ benchmarkpkg("OMEinsum", "benchmark", resultfile = "benchmarkfiles/juliabenchmar
 # df = parsejuliajson(df, "benchmarkfiles/juliabenchdispatch.json", label="dispatch")
 # df = parsepybenchjson(df, "benchmarkfiles/benchnumpy.json",label="numpy")
 # df = parsepybenchjson(df, "benchmarkfiles/benchtorch.json",label="torch")
+# df = parsejuliajson(df, "benchmarkfiles/juliabenchmarkmaster.json",label="master")
+# df = parsejuliajson(df, "benchmarkfiles/juliabenchmarkmasterdispatch.json",label="masterdispatch")
 # CSV.write("benchmarkdf.csv", df)
 
 df = CSV.read("benchmarkdf.csv")
-
-@df @where(df, :label .∈ Ref(("native","numpy","dispatch")),
+#
+@df @where(df, :label .∈ Ref(("numpy","masterdispatch","master")),
                :ttype .== "Float64",
                :mtype .== "medium") scatter(
     :op,
@@ -43,7 +47,7 @@ for mtype in mtypes
     p = @df @where(df,
         :ttype .== "Float64",
         :mtype .== mtype,
-        :label .∈ Ref(("dispatch", "native","numpy","torch","einsumjl")),
+        :label .∈ Ref(("masterdispatch", "native","numpy","torch","einsumjl")),
         ) scatter(
         :op, :tmin, group = :label, yscale=:log10,
         legend = :topleft,
@@ -57,7 +61,7 @@ end
 
 
 scoresdf = benchmarkscores(
-    @where(df, :label .∈ Ref(("einsumjl","dispatch","naive","numpy", "torch")),
+    @where(df, :label .∈ Ref(("einsumjl","masterdispatch","naive","numpy", "torch")),
                :ttype .== "Float64"),
     "numpy")
 using CSV
