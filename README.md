@@ -1,6 +1,6 @@
 # OMEinsum-Benchmarks
 
-This repository is used to compare the performance of `einsum` in python (`numpy`, `torch` and `tensorflow`), with implementations (WIP) in `julia`.
+This repository is used to compare the performance of `einsum` in python (`numpy`, `torch`), with implementations in `julia`.
 
 In `/pythonscripts`, the benchmarking-scripts for `numpy.einsum` and `torch.einsum` can be found.
 The tested operations are:
@@ -23,14 +23,17 @@ The tested operations are:
 
 The benchmarks have been evaluated over inputs of different size,
 labelled (ad-hoc) as `tiny`, `small`, `medium`, `large` and `huge`.
-The current benchmark has been run with `torch`, `numpy` and some naive implementations
-in plain `julia` with the aim of just implementing all functions,
-without generality or speed in mind.
-
-So far, this whole document is mainly a placeholder.
+The current benchmark has been run with `torch`, `numpy` for python and
+`OMEinsum.jl` and `Einsum.jl` for julia.
 
 # Overview
-The plots are split by the memory footprint of the operations, i.e. by size size of the tensors involved which have been classified as tiny, small, medium, large or huge.
+The plots are split by the memory footprint of the operations,
+i.e. by size size of the tensors involved which have been classified as tiny, small, medium, large or huge
+rather arbitrarily.
+The results below are for tensors of type `float64` but
+more results can be found in the `plots/` folder.
+Generally, changing to `float32` or complex types does not change
+the picture too much, except that torch does not support complex numbers.
 
 ## tiny tensors
 ![](plots/float64-tiny.png)

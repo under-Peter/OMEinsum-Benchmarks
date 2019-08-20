@@ -9,29 +9,18 @@ using CSV
 include("parsebenchmarks.jl")
 using PkgBenchmark
 using OMEinsum
-# benchmarkpkg("OMEinsum", "benchmark", resultfile = "benchmarkfiles/juliabenchmark.json")
-# benchmarkpkg("OMEinsum", "fix-benchmarks", resultfile = "benchmarkfiles/juliabenchmarkmaster.json")
-# benchmarkpkg("OMEinsum", "master", resultfile = "benchmarkfiles/juliabenchmarkmasterdispatch.json")
-# benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
-# benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
-# benchmarkpkg("OMEinsum", "naive-einsum-bm", resultfile = "benchmarkfiles/juliabenchmarknaiv.json")
-# benchmarkpkg("OMEinsum", "dispatch-testing", resultfile = "benchmarkfiles/juliabenchdispatch.json")
-# benchmarkpkg("OMEinsum", "benchmark-tensoroperations", resultfile = "benchmarkfiles/juliabenchmarktensoroperations.json")
+benchmarkpkg("OMEinsum", "master", resultfile = "benchmarkfiles/juliabenchmarkmaster.json")
+benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
+# isnothing(x) = x === nothing
 # df = parsejuliajson(emptydf, "benchmarkfiles/juliabenchmarkeinsumjl.json", label = "einsumjl")
-# df = parsejuliajson(df, "benchmarkfiles/juliabenchmarktensoroperations.json", label="tensorops")
-# df = parsejuliajson(df, "benchmarkfiles/juliabenchmark.json", label="native")
-# df = parsejuliajson(df, "benchmarkfiles/juliabenchmark2.json", label="exp-space")
-# df = parsejuliajson(df, "benchmarkfiles/juliabenchmarknaiv.json", label="naive")
-# df = parsejuliajson(df, "benchmarkfiles/juliabenchdispatch.json", label="dispatch")
 # df = parsepybenchjson(df, "benchmarkfiles/benchnumpy.json",label="numpy")
 # df = parsepybenchjson(df, "benchmarkfiles/benchtorch.json",label="torch")
 # df = parsejuliajson(df, "benchmarkfiles/juliabenchmarkmaster.json",label="master")
-# df = parsejuliajson(df, "benchmarkfiles/juliabenchmarkmasterdispatch.json",label="masterdispatch")
 # CSV.write("benchmarkdf.csv", df)
 
 df = CSV.read("benchmarkdf.csv")
 #
-@df @where(df, :label .∈ Ref(("numpy","masterdispatch","master")),
+@df @where(df, :label .∈ Ref(("numpy","torch","master","einsumjl")),
                :ttype .== "Float64",
                :mtype .== "medium") scatter(
     :op,
@@ -43,20 +32,24 @@ df = CSV.read("benchmarkdf.csv")
     yscale=:log10)
 
 mtypes = ["tiny", "small", "medium", "large", "huge"]
+ttypes = ["Float64", "Float32", "Complex{Float64}", "Complex{Float32}"]
 for mtype in mtypes
-    p = @df @where(df,
-        :ttype .== "Float64",
-        :mtype .== mtype,
-        :label .∈ Ref(("masterdispatch", "native","numpy","torch","einsumjl")),
-        ) scatter(
-        :op, :tmin, group = :label, yscale=:log10,
-        legend = :topleft,
-        marker = :auto,
-        ylabel = "ns",
-        ylims = (1,10^13),
-        yticks = 10 .^ (0:13),
-        xrotation=35, xtickfont = font(8))
-    savefig(p, "plots/float64-$(lowercase(mtype)).png")
+    for ttype in ttypes
+        p = @df @where(df,
+            :ttype .== ttype,
+            :mtype .== mtype,
+            :label .∈ Ref(("master", "numpy","torch","einsumjl")),
+            ) scatter(
+            :op, :tmin, group = :label, yscale=:log10,
+            legend = :topleft,
+            marker = :auto,
+            title = lowercase(ttype),
+            ylabel = "ns",
+            ylims = (1,10^13),
+            yticks = 10 .^ (0:13),
+            xrotation=35, xtickfont = font(8))
+        savefig(p, "plots/$(lowercase(ttype))-$(lowercase(mtype)).png")
+    end
 end
 
 
