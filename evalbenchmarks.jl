@@ -31,7 +31,7 @@ df = CSV.read("benchmarkdf.csv")
     xrotation=35, xtickfont = font(8),
     yscale=:log10)
 
-mtypes = ["tiny", "small", "medium", "large", "huge"]
+mtypes = ["small", "medium", "large"]
 ttypes = ["Float64", "Float32", "Complex{Float64}", "Complex{Float32}"]
 for mtype in mtypes
     for ttype in ttypes
