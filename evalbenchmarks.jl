@@ -54,7 +54,7 @@ end
 
 
 scoresdf = benchmarkscores(
-    @where(df, :label .∈ Ref(("einsumjl","masterdispatch","naive","numpy", "torch")),
+    @where(df, :label .∈ Ref(("einsumjl","master","numpy", "torch")),
                :ttype .== "Float64"),
     "numpy")
 using CSV
