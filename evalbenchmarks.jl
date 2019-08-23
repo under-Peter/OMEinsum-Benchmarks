@@ -9,20 +9,21 @@ using CSV
 include("parsebenchmarks.jl")
 using PkgBenchmark
 using OMEinsum
-benchmarkpkg("OMEinsum", "master", resultfile = "benchmarkfiles/juliabenchmarkmaster.json")
-benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
-# isnothing(x) = x === nothing
-# df = parsejuliajson(emptydf, "benchmarkfiles/juliabenchmarkeinsumjl.json", label = "einsumjl")
-# df = parsepybenchjson(df, "benchmarkfiles/benchnumpy.json",label="numpy")
-# df = parsepybenchjson(df, "benchmarkfiles/benchtorch.json",label="torch")
-# df = parsejuliajson(df, "benchmarkfiles/juliabenchmarkmaster.json",label="master")
+# benchmarkpkg("OMEinsum", "master", resultfile = "benchmarkfiles/juliabenchmarkmaster.json")
+# benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
+isnothing(x) = x === nothing
+df = parsejuliajson(emptydf, "benchmarkfiles/juliabenchmarkeinsumjl.json", label = "einsumjl")
+df = parsepybenchjson(df, "benchmarkfiles/benchnumpy.json",label="numpy")
+df = parsepybenchjson(df, "benchmarkfiles/benchtorch.json",label="torch")
+df = parsejuliajson(df, "benchmarkfiles/juliabenchmarkmaster.json",label="master")
+df = parsejuliajson(df, "benchmarkfiles/julibenchmarkgpu.json",label="julia-gpu")
 # CSV.write("benchmarkdf.csv", df)
 
 df = CSV.read("benchmarkdf.csv")
 #
-@df @where(df, :label .∈ Ref(("numpy","torch","master","einsumjl")),
-               :ttype .== "Float64",
-               :mtype .== "medium") scatter(
+@df @where(df, :label .∈ Ref(("numpy","torch","master","einsumjl","julia-gpu")),
+               :ttype .== "Float32",
+               :mtype .== "large") scatter(
     :op,
     :tmin,
     ylims = (1, 10^13),
@@ -35,17 +36,17 @@ mtypes = ["small", "medium", "large"]
 ttypes = ["Float64", "Float32", "Complex{Float64}", "Complex{Float32}"]
 for mtype in mtypes
     for ttype in ttypes
-        p = @df @where(df,
-            :ttype .== ttype,
-            :mtype .== mtype,
-            :label .∈ Ref(("master", "numpy","torch","einsumjl")),
-            ) scatter(
+        tmpdf = @where(df, :ttype .== ttype, :mtype .== mtype,
+            :label .∈ Ref(("master", "numpy","torch","einsumjl","julia-gpu")),
+            )
+        tmax = maximum(tmpdf.tmin)
+        p = @df tmpdf scatter(
             :op, :tmin, group = :label, yscale=:log10,
-            legend = :topleft,
+            legend = :top,
             marker = :auto,
             title = lowercase(ttype),
             ylabel = "ns",
-            ylims = (1,10^13),
+            ylims = (1, tmax * 10^4),
             yticks = 10 .^ (0:13),
             xrotation=35, xtickfont = font(8))
         savefig(p, "plots/$(lowercase(ttype))-$(lowercase(mtype)).png")
