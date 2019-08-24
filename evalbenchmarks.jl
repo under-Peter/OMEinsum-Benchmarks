@@ -11,17 +11,18 @@ using PkgBenchmark
 using OMEinsum
 # benchmarkpkg("OMEinsum", "master", resultfile = "benchmarkfiles/juliabenchmarkmaster.json")
 # benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
-isnothing(x) = x === nothing
-df = parsejuliajson(emptydf, "benchmarkfiles/juliabenchmarkeinsumjl.json", label = "einsumjl")
-df = parsepybenchjson(df, "benchmarkfiles/benchnumpy.json",label="numpy")
-df = parsepybenchjson(df, "benchmarkfiles/benchtorch.json",label="torch")
-df = parsejuliajson(df, "benchmarkfiles/juliabenchmarkmaster.json",label="master")
-df = parsejuliajson(df, "benchmarkfiles/julibenchmarkgpu.json",label="julia-gpu")
+# isnothing(x) = x === nothing
+# df = parsejuliajson(emptydf, "benchmarkfiles/juliabenchmarkeinsumjl.json", label = "einsumjl")
+# df = parsepybenchjson(df, "benchmarkfiles/benchnumpy.json",label="numpy")
+# df = parsepybenchjson(df, "benchmarkfiles/benchtorch.json",label="torch")
+# df = parsepybenchjson(df, "benchmarkfiles/benchtorchgpu.json",label="torch-gpu")
+# df = parsejuliajson(df, "benchmarkfiles/juliabenchmarkmaster.json",label="master")
+# df = parsejuliajson(df, "benchmarkfiles/julibenchmarkgpu.json",label="julia-gpu")
 # CSV.write("benchmarkdf.csv", df)
 
 df = CSV.read("benchmarkdf.csv")
-#
-@df @where(df, :label .∈ Ref(("numpy","torch","master","einsumjl","julia-gpu")),
+
+@df @where(df, :label .∈ Ref(("numpy","torch","master","einsumjl","julia-gpu","torch-gpu")),
                :ttype .== "Float32",
                :mtype .== "large") scatter(
     :op,
@@ -37,7 +38,7 @@ ttypes = ["Float64", "Float32", "Complex{Float64}", "Complex{Float32}"]
 for mtype in mtypes
     for ttype in ttypes
         tmpdf = @where(df, :ttype .== ttype, :mtype .== mtype,
-            :label .∈ Ref(("master", "numpy","torch","einsumjl","julia-gpu")),
+            :label .∈ Ref(("master", "numpy","torch","einsumjl","julia-gpu","torch-gpu")),
             )
         tmax = maximum(tmpdf.tmin)
         p = @df tmpdf scatter(
@@ -55,9 +56,8 @@ end
 
 
 scoresdf = benchmarkscores(
-    @where(df, :label .∈ Ref(("einsumjl","master","numpy", "torch")),
+    @where(df, :label .∈ Ref(("einsumjl","master","numpy", "torch","julia-gpu","torch-gpu")),
                :ttype .== "Float64"),
     "numpy")
-using CSV
 
 CSV.write("scores.csv",scoresdf)
