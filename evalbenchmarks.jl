@@ -9,7 +9,7 @@ using CSV
 include("parsebenchmarks.jl")
 using PkgBenchmark
 using OMEinsum
-# benchmarkpkg("OMEinsum", "master", resultfile = "benchmarkfiles/juliabenchmarkmaster.json")
+benchmarkpkg("OMEinsum", "master", resultfile = "benchmarkfiles/juliabenchmarkmaster.json")
 # benchmarkpkg("OMEinsum", "benchmark-einsumjl", resultfile = "benchmarkfiles/juliabenchmarkeinsumjl.json")
 # isnothing(x) = x === nothing
 # df = parsejuliajson(emptydf, "benchmarkfiles/juliabenchmarkeinsumjl.json", label = "einsumjl")
