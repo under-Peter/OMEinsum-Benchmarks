@@ -24,9 +24,9 @@ df = CSV.read("benchmarkdf.csv")
 
 @df @where(df, :label .∈ Ref(("numpy","torch","master","einsumjl","julia-gpu","torch-gpu")),
                :ttype .== "Float32",
-               :mtype .== "large") scatter(
+               :mtype .== "small") scatter(
     :op,
-    :tmin,
+    :tmedian,
     ylims = (1, 10^13),
     group = :label,
     legend = :topleft,
@@ -38,7 +38,7 @@ ttypes = ["Float64", "Float32", "Complex{Float64}", "Complex{Float32}"]
 for mtype in mtypes
     for ttype in ttypes
         tmpdf = @where(df, :ttype .== ttype, :mtype .== mtype,
-            :label .∈ Ref(("master", "numpy","torch","einsumjl","julia-gpu","torch-gpu")),
+            :label .∈ Ref(("master", "numpy","torch","einsumjl","julia-gpu"#=,"torch-gpu"=#)),
             )
         tmax = maximum(tmpdf.tmin)
         p = @df tmpdf scatter(
