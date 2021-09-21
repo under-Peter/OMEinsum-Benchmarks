@@ -4,9 +4,30 @@ import torch
 import numpy
 import pytest
 
-raise NameError('Please manually chose a cuda device, default is 4')
+#raise NameError('Please manually chose a cuda device, default is 4')
 
+def manyinds(a,b):
+    c = torch.einsum("abcdefghijklmnop,flnqrcipstujvgamdwxyz->bcdeghkmnopqrstuvwxyz",a,b)
+    torch.cuda.synchronize()
 
+@pytest.mark.parametrize("dt",
+        [torch.float32, torch.float64],
+        ids = ["Float32", "Float64"])
+@pytest.mark.parametrize("dim",[2], ids = ["tiny"])
+def test_manyinds(benchmark, dim,  dt):
+    str = "abcdefghijklmnop,flnqrcipstujvgamdwxyz->bcdeghkmnopqrstuvwxyz"
+    inputs = str.split('-')[0]
+    len1 = len(set(inputs.split(',')[0]))
+    len2 = len(set(inputs.split(',')[1]))
+    arr1_dims = [dim]*len1
+    arr1 = numpy.random.random_sample(arr1_dims)
+    arr1 = torch.tensor(arr1, dtype=dt)
+    arr2_dims = [dim]*len2
+    arr2 = numpy.random.random_sample(arr2_dims)
+    arr2 = torch.tensor(arr2, dtype=dt)
+    ca1 = arr1.cuda(4)
+    ca2 = arr2.cuda(4)
+    benchmark(manyinds, ca1, ca2)
 
 def matmul(a,b):
     c = torch.einsum("ij,jk->ik",a,b)

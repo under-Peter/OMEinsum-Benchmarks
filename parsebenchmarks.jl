@@ -100,6 +100,7 @@ Since missing terms are ignored, it is recommended to preparse the `df`.
 
 function benchmarkscores(df, ref)
     weights = Dict{String,Float64}(
+         "manyinds" => 1,
          "matmul" => 1,
          "batchmul" => 1,
          "dot" => 1,

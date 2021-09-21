@@ -1,9 +1,9 @@
 # run with $ py.test --benchmark-save="test" pytestbm.py
 # will save in STORAGE-PATH (.benchmarks/.../)
-import torch
+import cupy as cp
 import pytest
 import numpy as np
-
+import opt_einsum as oe
 
 # high index count, complicated operation
 @pytest.mark.parametrize("dt",
@@ -17,11 +17,11 @@ def test_manyinds(benchmark, dim,  dt):
     len2 = len(set(inputs.split(',')[1]))
     arr1_dims = [dim]*len1
     arr1 = np.random.random_sample(arr1_dims)
-    arr1 = arr1.astype(dt)
+    arr1 = cp.array(arr1.astype(dt))
     arr2_dims = [dim]*len2
     arr2 = np.random.random_sample(arr2_dims)
-    arr2 = arr2.astype(dt)
-    benchmark(np.einsum, str, arr1,arr2)
+    arr2 = cp.array(arr2.astype(dt))
+    benchmark(oe.contract, str, arr1,arr2)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -34,8 +34,8 @@ def test_manyinds(benchmark, dim,  dt):
     ],
     ids = ["tiny", "small", "medium", "large"])
 def test_matmul(benchmark, arr, dt):
-    arr = arr.astype(dt)
-    benchmark(np.einsum, "ij,jk->ik", arr,arr)
+    arr = cp.array(arr.astype(dt))
+    benchmark(oe.contract, "ij,jk->ik", arr,arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -48,8 +48,8 @@ def test_matmul(benchmark, arr, dt):
     ],
     ids = ["tiny", "small", "medium", "large"])
 def test_batchmul(benchmark, arr, dt):
-    arr = arr.astype(dt)
-    benchmark(np.einsum, "ijl,jkl->ikl", arr,arr)
+    arr = cp.array(arr.astype(dt))
+    benchmark(oe.contract, "ijl,jkl->ikl", arr,arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -63,8 +63,8 @@ def test_batchmul(benchmark, arr, dt):
     ],
     ids = ["tiny", "small", "medium", "large", "huge"])
 def test_dot(benchmark, arr, dt):
-    arr = arr.astype(dt)
-    benchmark(np.einsum, "ijl,ijl->", arr,arr)
+    arr = cp.array(arr.astype(dt))
+    benchmark(oe.contract, "ijl,ijl->", arr,arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -78,7 +78,7 @@ def test_dot(benchmark, arr, dt):
     ids =["tiny", "small", "medium", "large"])
 def test_trace(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "ii->", arr)
+    benchmark(oe.contract, "ii->", arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -93,7 +93,7 @@ def test_trace(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large", "huge"])
 def test_ptrace(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "iij->j", arr)
+    benchmark(oe.contract, "iij->j", arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -108,7 +108,7 @@ def test_ptrace(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large", "huge"])
 def test_diag(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark((lambda x,y: np.einsum(x,y).copy()), "jii->ji", arr)
+    benchmark((lambda x,y: oe.contract(x,y).copy()), "jii->ji", arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -122,7 +122,7 @@ def test_diag(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large"])
 def test_perm(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark((lambda x,y: np.einsum(x,y).copy()), "ijkl->ljki", arr)
+    benchmark((lambda x,y: oe.contract(x,y).copy()), "ijkl->ljki", arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -136,7 +136,7 @@ def test_perm(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large"])
 def test_tcontract(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "ikl,kjl->ij", arr,arr)
+    benchmark(oe.contract, "ikl,kjl->ij", arr,arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -150,7 +150,7 @@ def test_tcontract(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large"])
 def test_star(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "ij,ik,il->jkl", arr,arr,arr)
+    benchmark(oe.contract, "ij,ik,il->jkl", arr,arr,arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -164,7 +164,7 @@ def test_star(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large"])
 def test_starandcontract(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "ij,il,il->j", arr,arr,arr)
+    benchmark(oe.contract, "ij,il,il->j", arr,arr,arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -178,7 +178,7 @@ def test_starandcontract(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large"])
 def test_indexsum(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "ijk->ik", arr)
+    benchmark(oe.contract, "ijk->ik", arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -192,7 +192,7 @@ def test_indexsum(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large"])
 def test_hadamard(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "ijk,ijk->ijk", arr,arr)
+    benchmark(oe.contract, "ijk,ijk->ijk", arr,arr)
 
 @pytest.mark.parametrize("dt",
         [np.float32, np.float64, np.complex64, np.complex128],
@@ -206,4 +206,4 @@ def test_hadamard(benchmark, arr, dt):
     ids = ["tiny", "small", "medium", "large"])
 def test_outer(benchmark, arr, dt):
     arr = arr.astype(dt)
-    benchmark(np.einsum, "ij,kl->ijkl", arr,arr)
+    benchmark(oe.contract, "ij,kl->ijkl", arr,arr)

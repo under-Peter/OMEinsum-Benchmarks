@@ -3,6 +3,7 @@ $ virtualenv --system-site-packages -p python3 ./benchmarkpython
 $ source ./benchmarkpython/bin/activate
 
 $ pip install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
+$ pip install opt_einsum
 $ pip install torchvision
 $ pip install --upgrade tensorflow
 $ pip install pytest-benchmark
