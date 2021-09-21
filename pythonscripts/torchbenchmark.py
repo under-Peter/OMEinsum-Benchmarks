@@ -5,6 +5,22 @@ import numpy
 import pytest
 
 
+@pytest.mark.parametrize("dt",
+        [torch.float32, torch.float64],
+        ids = ["Float32", "Float64"])
+@pytest.mark.parametrize("dim",[2], ids = ["tiny"])
+def test_manyinds(benchmark, dim,  dt):
+    str = "abcdefghijklmnop,flnqrcipstujvgamdwxyz->bcdeghkmnopqrstuvwxyz"
+    inputs = str.split('-')[0]
+    len1 = len(set(inputs.split(',')[0]))
+    len2 = len(set(inputs.split(',')[1]))
+    arr1_dims = [dim]*len1
+    arr1 = numpy.random.random_sample(arr1_dims)
+    arr1 = torch.tensor(arr1, dtype=dt)
+    arr2_dims = [dim]*len2
+    arr2 = numpy.random.random_sample(arr2_dims)
+    arr2 = torch.tensor(arr2, dtype=dt)
+    benchmark(torch.einsum, str, arr1,arr2)
 
 @pytest.mark.parametrize("dt",
         [torch.float32, torch.float64],
